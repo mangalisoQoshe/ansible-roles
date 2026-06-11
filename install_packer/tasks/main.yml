@@ -1,0 +1,61 @@
+- name: Download Packer v{{ pkr_version }} binary
+  ansible.builtin.get_url:
+    url: https://releases.hashicorp.com/packer/{{ pkr_version }}/packer_{{ pkr_version }}_linux_amd64.zip
+    dest: /tmp/packer.zip
+    mode: '0711'
+  when: ansible_facts['architecture'] == "x86_64"
+
+- name: Create temp directory for Packer
+  ansible.builtin.file:
+    path: /tmp/packer_extract
+    state: directory
+    mode: '0755'
+
+- name: Unarchive Packer zip file
+  ansible.builtin.unarchive:
+    src: /tmp/packer.zip
+    dest: /tmp/packer_extract
+    remote_src: true
+  when: ansible_facts['architecture'] == "x86_64"
+
+- name: Copy only the packer binary to /usr/local/bin
+  ansible.builtin.copy:
+    src: /tmp/packer_extract/packer
+    dest: /usr/local/bin/packer
+    mode: '0755'
+    remote_src: true
+  when: ansible_facts['architecture'] == "x86_64"
+  
+# Packer no longer supports ARMv6l arch,
+# Donwload the source code and build the binary locally
+# No need to install Packer for RaspberryPI
+# - name: Install Packer v1.14.2  source code
+#   ansible.builtin.get_url:
+#     url: https://github.com/hashicorp/packer/archive/refs/tags/v1.14.2.zip
+#     dest: /tmp/packer.zip
+#     mode: '0711'
+#   when:  ansible_architecture == "armv6l" 
+
+# - name:  ARMv6l Unarchive Packer source code zip file
+#   ansible.builtin.unarchive:
+#     src: /tmp/packer.zip
+#     dest: /tmp/
+#     remote_src: yes
+#   when:  ansible_architecture == "armv6l" 
+
+# - name: Build Packer binary
+#   ansible.builtin.command:
+#     chdir: /tmp/packer-1.14.2
+#     cmd: go build -o /usr/local/bin/packer .
+#   environment:
+#     PATH: "{{ ansible_env.PATH }}:/usr/local/go/bin"
+#   when:  ansible_architecture == "armv6l" 
+
+# - name: Move Terraform binary to /usr/local/bin
+#   ansible.builtin.copy:
+#     src: /tmp/terraform/terraform
+#     dest: /usr/local/bin/terraform
+#     mode: '0755' 
+#   when:  ansible_architecture == "armv6l" 
+
+

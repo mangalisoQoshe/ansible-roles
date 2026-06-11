@@ -1,0 +1,78 @@
+
+- name: Download Terraform v{{ tf_version }} binary
+  ansible.builtin.get_url:
+    url: https://releases.hashicorp.com/terraform/{{ tf_version }}/terraform_{{ tf_version }}_linux_amd64.zip
+    dest: /tmp/terraform.zip
+    mode: '0711'
+  when: ansible_facts['architecture'] == "x86_64"
+
+- name: Create temp directory for Terraform
+  ansible.builtin.file:
+    path: /tmp/terraform_extract
+    state: directory
+    mode: '0755'
+
+- name: Unarchive a Terraform zip file
+  ansible.builtin.unarchive:
+    src: /tmp/terraform.zip
+    dest: /tmp/terraform_extract
+    remote_src: yes
+  when: ansible_facts['architecture'] == "x86_64"
+
+- name: Copy  Terraform binary to /usr/local/bin
+  ansible.builtin.copy:
+    src: /tmp/terraform_extract/terraform
+    dest: /usr/local/bin/terraform
+    mode: '0755'
+    remote_src: true
+  when: ansible_facts['architecture'] == "x86_64"
+
+
+
+# - name: ARMv6l Install Terraform v1.5.7  binary
+#   ansible.builtin.get_url:
+#     url: https://releases.hashicorp.com/terraform/1.5.7/terraform_1.5.7_linux_arm.zip
+#     dest: /tmp/terraform.zip
+#     mode: '0711'
+#   when:  ansible_architecture == "armv6l" 
+
+# - name:  ARMv6l Unarchive a Terraform zip file
+#   ansible.builtin.unarchive:
+#     src: /tmp/terraform.zip
+#     dest: /usr/local/bin
+#     remote_src: yes
+#   when:  ansible_architecture == "armv6l"   
+  
+# Terraform no longer supports ARMv6l arch,
+# Donwload the source code and build the binary locally
+# No need to install Terraform on RaspberryPi because for it to work I will need to also compile Terraform plugins
+# - name: Install Terraform v1.13.4  source code
+#   ansible.builtin.get_url:
+#     url: https://github.com/hashicorp/terraform/archive/refs/tags/v1.13.4.zip
+#     dest: /tmp/terraform.zip
+#     mode: '0711'
+#   when:  ansible_architecture == "armv6l" 
+
+# - name:  ARMv6l Unarchive Terraform source code zip file
+#   ansible.builtin.unarchive:
+#     src: /tmp/terraform.zip
+#     dest: /tmp/
+#     remote_src: yes
+#   when:  ansible_architecture == "armv6l" 
+
+# - name: Build Terraform binary
+#   ansible.builtin.command:
+#     chdir: /tmp/terraform-1.13.4
+#     cmd: go build -o /usr/local/bin/terraform .
+#   environment:
+#     PATH: "{{ ansible_env.PATH }}:/usr/local/go/bin"
+#   when:  ansible_architecture == "armv6l" 
+
+# - name: Move Terraform binary to /usr/local/bin
+#   ansible.builtin.copy:
+#     src: /tmp/terraform/terraform
+#     dest: /usr/local/bin/terraform
+#     mode: '0755' 
+#   when:  ansible_architecture == "armv6l" 
+
+

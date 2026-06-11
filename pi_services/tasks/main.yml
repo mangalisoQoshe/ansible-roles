@@ -1,0 +1,44 @@
+- name: Create '/home/user/.adguard' directory
+  ansible.builtin.file:
+    path: /home/{{ ssh_user }}/.adguard
+    state: directory
+    mode: '0755'  
+
+- name: Copy Docker Compose file to /home/user/.adgurd/
+  ansible.builtin.copy:
+    src: ../files/docker-compose_adguard.yml
+    dest:  /home/{{ ssh_user }}/.adguard/docker-compose.yml
+
+- name: Run Adguard-Home service
+  community.docker.docker_compose_v2:
+    project_src:  /home/{{ ssh_user }}/.adguard
+    state: present
+  register: output
+
+- name: Show results
+  ansible.builtin.debug:
+    var: output
+
+# Tailscale docker image isn't supported for RaspberryPI ARMv6 
+# - name: Create '/home/user/.tailscale' directory
+#   ansible.builtin.file:
+#     path: /home/{{ ssh_user }}/.tailscale
+#     state: directory
+#     mode: '0755'  
+
+# - name: Copy Docker Compose file to /home/user/.tailscale/
+#   ansible.builtin.copy:
+#     src: ../files/docker-compose_tailscale.yml
+#     dest:  /home/{{ ssh_user }}/.tailscale/docker-compose.yml
+
+# - name: Run Tailcale service
+#   community.docker.docker_compose_v2:
+#     project_src:  /home/{{ ssh_user }}/.tailscale
+#     state: present
+#   environment:
+#     TS_AUTH_KEY: "{{ lookup('env', 'TS_AUTH_KEY') }}"
+#   register: output_2
+
+# - name: Show results
+#   ansible.builtin.debug:
+#     var: output_2

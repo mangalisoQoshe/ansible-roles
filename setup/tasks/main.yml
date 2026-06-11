@@ -1,0 +1,59 @@
+- name: Install fail2ban, ca-certificates, and curl
+  ansible.builtin.apt:
+    name: 
+      - fail2ban
+      - ca-certificates 
+      - curl
+      - vim
+      - unzip
+
+- name: Install ufw (Ubuntu only)
+  ansible.builtin.apt:
+    name: ufw
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Open Port 22 (Ubuntu only)
+  ansible.builtin.command:
+    cmd: ufw allow 22
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Limit Login attempts
+  ansible.builtin.command:
+    cmd: ufw limit ssh/tcp
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Enable ufw (Ubuntu only)
+  ansible.builtin.command:
+    cmd: ufw --force enable
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Enable and start fail2ban
+  ansible.builtin.service:
+    name: fail2ban
+    state: started
+    enabled: true
+
+- name: Deploy fail2ban jail.local
+  ansible.builtin.copy:
+    src: ../files/jail.local
+    dest: /etc/fail2ban/jail.local
+  notify: restart_fail2ban
+  
+- name: Disable ssh Password Authentication
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^#PasswordAuthentication "
+    line: "PasswordAuthentication no"
+    validate: 'sshd -t -f %s' 
+  notify: restart_sshd
+
+- name: Disable root SSH login
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^#?PermitRootLogin"   
+    line: 'PermitRootLogin prohibit-password'
+    state: present
+    validate: 'sshd -t -f %s'      # validates config before saving
+  notify: restart_sshd
+
+

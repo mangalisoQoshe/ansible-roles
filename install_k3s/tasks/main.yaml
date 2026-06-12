@@ -1,0 +1,11 @@
+- name: Download k3s convenience script
+  ansible.builtin.get_url:
+    url: https://get.k3s.io/
+    dest: /tmp/install-k3s.sh
+    mode: "0755"
+
+- name: Install k3s
+  ansible.builtin.command:
+    cmd: /tmp/install-k3s.sh
+  args:
+    creates: /usr/local/bin/k3s
